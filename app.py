@@ -69,8 +69,8 @@ except ImportError as e:
     AdvancedForecastEngine = None
 
 app = Flask(__name__, 
-           template_folder=os.path.join(os.path.dirname(__file__), '..', 'frontend', 'templates'),
-           static_folder=os.path.join(os.path.dirname(__file__), '..', 'frontend', 'static'))
+           template_folder='templates',
+           static_folder='static')
 app.secret_key = 'zra_revenue_analytics_secret_key_2024'
 CORS(app)
 
@@ -819,3 +819,4 @@ if __name__ == '__main__':
     # PRODUCTION SETTINGS
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
+
