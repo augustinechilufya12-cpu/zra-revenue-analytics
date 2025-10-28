@@ -51,92 +51,40 @@ class RevenueForecasting {
         const dates = forecasts.Total_Revenue.dates;
         
         const traces = Object.keys(forecasts).map(taxType => {
-            // Convert values from millions to proper display format
-            const valuesInMillions = forecasts[taxType].values.map(value => value); // Values are already in millions
-            
             return {
                 x: dates,
-                y: valuesInMillions,
-                name: this.formatTaxTypeName(taxType),
+                y: forecasts[taxType].values,
+                name: taxType.replace('_', ' '),
                 type: 'line',
                 mode: 'lines+markers',
-                hovertemplate: `${this.formatTaxTypeName(taxType)}: ZMW %{y:.3f}M<extra></extra>`
+                hovertemplate: ${taxType.replace('_', ' ')}: %{y:,.0f}<extra></extra>
             };
         });
 
         const layout = {
-            title: {
-                text: '12-Month Revenue Forecast by Tax Type',
-                font: { size: 16, weight: 'bold' }
-            },
+            title: '12-Month Revenue Forecast by Tax Type',
             xaxis: {
-                title: {
-                    text: 'Month',
-                    font: { size: 12, weight: 'bold' }
-                },
+                title: 'Month',
                 type: 'date',
-                tickformat: '%b %Y',
-                tickangle: -45,
-                tickfont: { size: 10 },
-                gridcolor: '#f0f0f0',
-                showgrid: true
+                tickformat: '%b %Y'
             },
             yaxis: {
-                title: {
-                    text: 'Revenue (ZMW Millions)',
-                    font: { size: 12, weight: 'bold' }
-                },
-                tickformat: ',.0f',
-                tickprefix: 'ZMW ',
-                ticksuffix: 'M',
-                tickfont: { size: 10 },
-                gridcolor: '#f0f0f0',
-                showgrid: true,
-                rangemode: 'tozero'
+                title: 'Revenue (ZMW)',
+                tickformat: ',.0f'
             },
             hovermode: 'closest',
             showlegend: true,
             legend: {
                 orientation: 'h',
-                y: -0.3,
-                x: 0.5,
-                xanchor: 'center',
-                font: { size: 10 }
+                y: -0.2
             },
-            margin: { t: 60, r: 40, b: 100, l: 80 },
-            plot_bgcolor: 'white',
-            paper_bgcolor: 'white'
+            margin: { t: 50, r: 50, b: 100, l: 80 }
         };
 
-        const config = {
+        Plotly.newPlot('revenue-forecast-chart', traces, layout, {
             responsive: true,
-            displayModeBar: true,
-            displaylogo: false,
-            modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
-            toImageButtonOptions: {
-                format: 'png',
-                filename: 'revenue_forecast',
-                height: 500,
-                width: 800,
-                scale: 2
-            }
-        };
-
-        Plotly.newPlot('revenue-forecast-chart', traces, layout, config);
-    }
-
-    // Helper method to format tax type names
-    formatTaxTypeName(taxType) {
-        const nameMap = {
-            'Total_Revenue': 'Total Revenue',
-            'Corporate_Tax': 'Corporate Tax',
-            'Customs_Duties': 'Customs Duties',
-            'Excise_Tax': 'Excise Tax',
-            'Mineral_Royalty': 'Mineral Royalty',
-            'PAYE': 'PAYE',
-            'VAT': 'VAT'
-        };
-        return nameMap[taxType] || taxType.replace('_', ' ');
+            displayModeBar: true
+        });
     }
 
     createHeatmap(forecasts) {
@@ -153,7 +101,7 @@ class RevenueForecasting {
             z.push(values);
             
             const rowText = values.map((value, i) => 
-                `${this.formatTaxTypeName(taxType)}<br>${months[i]}<br>ZMW ${value.toFixed(3)}M`
+                ${taxType.replace('_', ' ')}<br>${months[i]}<br>ZMW ${value.toLocaleString()}
             );
             text.push(rowText);
         });
@@ -161,7 +109,7 @@ class RevenueForecasting {
         const trace = {
             z: z,
             x: months,
-            y: taxTypes.map(type => this.formatTaxTypeName(type)),
+            y: taxTypes.map(type => type.replace('_', ' ')),
             type: 'heatmap',
             colorscale: 'Viridis',
             hoverinfo: 'text',
@@ -169,24 +117,15 @@ class RevenueForecasting {
             hoverlabel: {
                 bgcolor: 'white',
                 bordercolor: 'black',
-                font: { color: 'black', size: 10 }
+                font: { color: 'black' }
             }
         };
 
         const layout = {
-            title: {
-                text: 'Monthly Revenue Distribution Forecast (ZMW Millions)',
-                font: { size: 14, weight: 'bold' }
-            },
-            xaxis: { 
-                title: 'Month',
-                tickangle: 0
-            },
-            yaxis: { 
-                title: 'Tax Type',
-                tickfont: { size: 10 }
-            },
-            margin: { t: 60, r: 50, b: 50, l: 120 }
+            title: 'Monthly Revenue Distribution Forecast',
+            xaxis: { title: 'Month' },
+            yaxis: { title: 'Tax Type' },
+            margin: { t: 50, r: 50, b: 50, l: 120 }
         };
 
         Plotly.newPlot('revenue-heatmap', [trace], layout, {
@@ -211,8 +150,8 @@ class RevenueForecasting {
         thead.innerHTML = `
             <tr>
                 <th>Tax Type</th>
-                <th>Total Forecast (ZMW M)</th>
-                <th>Avg Monthly (ZMW M)</th>
+                <th>Total Forecast</th>
+                <th>Avg Monthly</th>
                 <th>Growth Rate</th>
             </tr>
         `;
@@ -223,8 +162,8 @@ class RevenueForecasting {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.tax_type}</td>
-                <td>${(item.total_forecast).toFixed(3)}</td>
-                <td>${item.average_monthly.toFixed(3)}</td>
+                <td>ZMW ${item.total_forecast.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                <td>ZMW ${item.average_monthly.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
                 <td class="${item.growth_rate >= 0 ? 'positive' : 'negative'}">
                     ${item.growth_rate >= 0 ? '+' : ''}${item.growth_rate.toFixed(1)}%
                 </td>
