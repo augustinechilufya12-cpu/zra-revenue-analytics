@@ -40,7 +40,7 @@ class AdvancedForecastEngine:
     
     def load_models_with_fallback(self):
         """Load models with robust error handling and fallbacks"""
-        models_folder = r'C:\Users\AUGUSTINE\Documents\ZRA_Projcet\backend\trained_models'
+        models_folder = os.path.join(os.path.dirname(__file__), '..', 'trained_models')
         
         model_files = {
             'Corporate_Tax': 'Corporate_Tax_model.pkl',
@@ -395,4 +395,5 @@ class AdvancedForecastEngine:
                     'method': method
                 })
         
+
         return summary
