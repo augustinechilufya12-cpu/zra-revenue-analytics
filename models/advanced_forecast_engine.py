@@ -149,7 +149,7 @@ class AdvancedForecastEngine:
                 'growth_rate': 0.09, 'monthly_variation': 0.12
             }
         }
-    
+        
         self.fallback_models[tax_type] = fallback_patterns.get(tax_type, {
             'base': 1000, 'trend': 50, 'seasonality': 0.1,
             'growth_rate': 0.05, 'monthly_variation': 0.1
@@ -210,7 +210,7 @@ class AdvancedForecastEngine:
             return {"error": f"Forecast generation failed: {str(e)}"}
     
     def generate_scaled_forecast(self, tax_type, model, future_dates):
-        """Generate forecast and scale it to realistic values"""
+        """Generate forecast and scale it to realistic values in millions"""
         try:
             future = pd.DataFrame({'ds': future_dates})
             forecast = model.predict(future)
@@ -221,17 +221,17 @@ class AdvancedForecastEngine:
             # Get raw predictions
             raw_values = forecast['yhat'].values
         
-            # Apply scaling factor to get realistic values (in millions)
+            # Apply scaling factor to get realistic values (already in millions)
             scaling_factor = self.scaling_factors.get(tax_type, 1)
             scaled_values = raw_values * scaling_factor
         
-            # Convert to actual revenue values (multiply by 1,000,000 to get actual currency)
-            revenue_values = scaled_values * 1_000_000
+            # Values are now in millions (no need for extra multiplication)
+            revenue_values = scaled_values
         
             # Calculate confidence intervals
             if 'yhat_lower' in forecast.columns and 'yhat_upper' in forecast.columns:
-               yhat_lower = forecast['yhat_lower'].values * scaling_factor * 1_000_000
-               yhat_upper = forecast['yhat_upper'].values * scaling_factor * 1_000_000
+               yhat_lower = forecast['yhat_lower'].values * scaling_factor
+               yhat_upper = forecast['yhat_upper'].values * scaling_factor
             else:
                std_dev = np.std(revenue_values) * 0.1
                yhat_lower = np.maximum(0, revenue_values - std_dev)
@@ -239,7 +239,7 @@ class AdvancedForecastEngine:
         
             return {
                 'dates': future_dates.strftime('%Y-%m-%d').tolist(),
-                'values': revenue_values.tolist(),  # Now in actual currency units
+                'values': revenue_values.tolist(),  # Values in millions
                 'yhat_lower': yhat_lower.tolist(),
                 'yhat_upper': yhat_upper.tolist(),
                 'method': 'ML Model'
@@ -366,9 +366,7 @@ class AdvancedForecastEngine:
                 growth = ((values[-1] - values[0]) / values[0] * 100) if values[0] != 0 else 0
                 method = data.get('method', 'Unknown')
                 
-                display_avg = f"K{avg_monthly/1e9:.2f}B"
-                
-                print(f"  {tax_type:18} | {display_avg:>10} avg | {growth:6.1f}% growth | {method}")
+                print(f"  {tax_type:18} | ZMW {avg_monthly:8.1f}M avg | {growth:6.1f}% growth | {method}")
         print("=" * 80)
     
     def get_forecast_summary(self, forecasts):
@@ -395,6 +393,4 @@ class AdvancedForecastEngine:
                     'method': method
                 })
         
-
         return summary
-
