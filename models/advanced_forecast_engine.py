@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import pickle
-import json
 import os
 from datetime import datetime, timedelta
 import warnings
@@ -24,46 +23,38 @@ class AdvancedForecastEngine:
         except Exception as e:
             print(f"❌ Error initializing Forecast Engine: {str(e)}")
             self.models_loaded = False
-    
+
     def calculate_scaling_factors(self):
-        """Calculate scaling factors based on actual Zambian revenue data (2023-2024)"""
-        # Based on ZRA annual reports and budget data
         scaling_factors = {
-            'VAT': 0.8,           # Actual: ~12-15 billion annually
-            'Corporate_Tax': 0.4,  # Actual: ~8-10 billion annually
-            'Customs_Duties': 0.3, # Actual: ~6-8 billion annually
-            'Excise_Tax': 0.2,     # Actual: ~4-5 billion annually
-            'Mineral_Royalty': 0.5, # Actual: ~10-12 billion annually (copper mining)
-            'PAYE': 0.6,           # Actual: ~10-12 billion annually
-            'Total_Revenue': 3.0   # Actual: ~65-75 billion annually total
+            'VAT': 0.8,
+            'Corporate_Tax': 0.4,
+            'Customs_Duties': 0.3,
+            'Excise_Tax': 0.2,
+            'Mineral_Royalty': 0.5,
+            'PAYE': 0.6,
+            'Total_Revenue': 3.0
         }
         return scaling_factors
-    
+
     def load_models_with_fallback(self):
-        """Load models with robust error handling and fallbacks"""
         models_folder = os.path.join(os.path.dirname(__file__), '..', 'trained_models')
-        
         model_files = {
             'Corporate_Tax': 'Corporate_Tax_model.pkl',
-            'Customs_Duties': 'Customs_Duties_model.pkl', 
+            'Customs_Duties': 'Customs_Duties_model.pkl',
             'Excise_Tax': 'Excise_Tax_model.pkl',
             'Mineral_Royalty': 'Mineral_Royalty_model.pkl',
             'PAYE': 'PAYE_model.pkl',
             'Total_Revenue': 'Total_Revenue_model.pkl',
             'VAT': 'VAT_model.pkl'
         }
-        
         loaded_count = 0
-        
         print(f"📂 Loading models from: {models_folder}")
-        
+
         for tax_type, model_file in model_files.items():
             model_path = os.path.join(models_folder, model_file)
             if os.path.exists(model_path):
                 try:
-                    # Try to load the model with different compatibility approaches
                     model = self.load_model_with_compatibility(model_path)
-                    
                     if model and self.validate_model(model, tax_type):
                         self.models[tax_type] = model
                         loaded_count += 1
@@ -71,160 +62,98 @@ class AdvancedForecastEngine:
                     else:
                         print(f"❌ Model validation failed for {tax_type}, using fallback")
                         self.create_fallback_for_tax(tax_type)
-                        
                 except Exception as e:
                     print(f"❌ Error loading {tax_type}: {str(e)}")
                     self.create_fallback_for_tax(tax_type)
             else:
                 print(f"❌ Model file not found: {model_path}")
                 self.create_fallback_for_tax(tax_type)
-        
         print(f"📊 Successfully loaded {loaded_count}/{len(model_files)} models")
-        
-        # If no models loaded, create fallbacks for all
         if loaded_count == 0:
             print("🔄 Creating fallback models for all tax types")
             for tax_type in model_files.keys():
                 self.create_fallback_for_tax(tax_type)
-    
+
     def load_model_with_compatibility(self, model_path):
-        """Load model with compatibility handling for different versions"""
         try:
             with open(model_path, 'rb') as f:
                 return pickle.load(f)
-        except (ModuleNotFoundError, AttributeError, ImportError) as e:
-            print(f"⚠️ Compatibility issue loading {os.path.basename(model_path)}: {str(e)}")
-            print("🔄 Attempting compatibility load...")
-            
-            # Try with protocol-based loading
+        except (ModuleNotFoundError, AttributeError, ImportError):
             try:
                 with open(model_path, 'rb') as f:
                     return pickle.load(f, encoding='latin1')
             except:
-                pass
-                
-            # Try with different protocols
-            for protocol in [pickle.HIGHEST_PROTOCOL, pickle.DEFAULT_PROTOCOL, 2]:
-                try:
-                    with open(model_path, 'rb') as f:
-                        return pickle.load(f, protocol=protocol)
-                except:
-                    continue
-            
-            print(f"❌ All compatibility attempts failed for {os.path.basename(model_path)}")
+                return None
+        except Exception:
             return None
-        except Exception as e:
-            print(f"❌ Other error loading model: {str(e)}")
-            return None
-    
+
     def create_fallback_for_tax(self, tax_type):
-        """Create realistic fallback patterns based on actual Zambian revenue data"""
-        # Monthly averages in millions based on ZRA actual collections (2023-2024)
         fallback_patterns = {
-            'VAT': {
-                'base': 1250, 'trend': 30, 'seasonality': 0.08,  # ~12-15 billion annually
-                'growth_rate': 0.12, 'monthly_variation': 0.10,
-                'min_value': 1100, 'max_value': 1400
-            },
-            'Corporate_Tax': {
-                'base': 800, 'trend': 20, 'seasonality': 0.15,   # ~8-10 billion annually
-                'growth_rate': 0.08, 'monthly_variation': 0.12,
-                'min_value': 700, 'max_value': 950
-            },
-            'Customs_Duties': {
-                'base': 600, 'trend': 15, 'seasonality': 0.06,   # ~6-8 billion annually
-                'growth_rate': 0.07, 'monthly_variation': 0.09,
-                'min_value': 550, 'max_value': 750
-            },
-            'Excise_Tax': {
-                'base': 400, 'trend': 10, 'seasonality': 0.10,   # ~4-5 billion annually
-                'growth_rate': 0.06, 'monthly_variation': 0.08,
-                'min_value': 350, 'max_value': 500
-            },
-            'Mineral_Royalty': {
-                'base': 900, 'trend': 40, 'seasonality': 0.12,   # ~10-12 billion annually (copper)
-                'growth_rate': 0.15, 'monthly_variation': 0.18,
-                'min_value': 800, 'max_value': 1100
-            },
-            'PAYE': {
-                'base': 950, 'trend': 25, 'seasonality': 0.05,   # ~10-12 billion annually
-                'growth_rate': 0.09, 'monthly_variation': 0.07,
-                'min_value': 850, 'max_value': 1100
-            },
-            'Total_Revenue': {
-                'base': 5800, 'trend': 150, 'seasonality': 0.07, # ~65-75 billion annually
-                'growth_rate': 0.10, 'monthly_variation': 0.08,
-                'min_value': 5500, 'max_value': 6500
-            }
+            'VAT': {'base': 1250, 'trend': 30, 'seasonality': 0.08, 'growth_rate': 0.12, 'monthly_variation': 0.1, 'min_value': 1100, 'max_value': 1400},
+            'Corporate_Tax': {'base': 800, 'trend': 20, 'seasonality': 0.15, 'growth_rate': 0.08, 'monthly_variation': 0.12, 'min_value': 700, 'max_value': 950},
+            'Customs_Duties': {'base': 600, 'trend': 15, 'seasonality': 0.06, 'growth_rate': 0.07, 'monthly_variation': 0.09, 'min_value': 550, 'max_value': 750},
+            'Excise_Tax': {'base': 400, 'trend': 10, 'seasonality': 0.10, 'growth_rate': 0.06, 'monthly_variation': 0.08, 'min_value': 350, 'max_value': 500},
+            'Mineral_Royalty': {'base': 900, 'trend': 40, 'seasonality': 0.12, 'growth_rate': 0.15, 'monthly_variation': 0.18, 'min_value': 800, 'max_value': 1100},
+            'PAYE': {'base': 950, 'trend': 25, 'seasonality': 0.05, 'growth_rate': 0.09, 'monthly_variation': 0.07, 'min_value': 850, 'max_value': 1100},
+            'Total_Revenue': {'base': 5800, 'trend': 150, 'seasonality': 0.07, 'growth_rate': 0.10, 'monthly_variation': 0.08, 'min_value': 5500, 'max_value': 6500}
         }
-        
-        self.fallback_models[tax_type] = fallback_patterns.get(tax_type, {
-            'base': 1000, 'trend': 25, 'seasonality': 0.1,
-            'growth_rate': 0.08, 'monthly_variation': 0.1,
-            'min_value': 800, 'max_value': 1200
-        })
+        self.fallback_models[tax_type] = fallback_patterns.get(tax_type, {'base': 1000, 'trend': 25, 'seasonality': 0.1, 'growth_rate': 0.08, 'monthly_variation': 0.1, 'min_value': 800, 'max_value': 1200})
         print(f"🔄 Created realistic fallback pattern for {tax_type}")
-    
+
     def validate_model(self, model, tax_type):
-        """Simple validation that model has predict method"""
         return hasattr(model, 'predict')
-    
+
     def generate_annual_forecast(self):
-        """Generate 12-month forecast using available models or fallbacks"""
         try:
             start_date = datetime.now().replace(day=1) + timedelta(days=32)
             start_date = start_date.replace(day=1)
-            
             future_dates = pd.date_range(start=start_date, periods=12, freq='MS')
-            
-            print(f"📅 Generating forecast for {len(future_dates)} months")
-            print(f"📊 ML models available: {len(self.models)}")
-            print(f"🔄 Fallback models available: {len(self.fallback_models)}")
-            
+
             forecasts = {}
-            
-            # Generate forecasts using available methods
             all_tax_types = list(set(list(self.models.keys()) + list(self.fallback_models.keys())))
-            
+
             for tax_type in all_tax_types:
+                forecast_data = None
                 if tax_type in self.models:
                     forecast_data = self.generate_scaled_forecast(tax_type, self.models[tax_type], future_dates)
-                    if forecast_data:
+                    if forecast_data and 'values' in forecast_data:
                         forecasts[tax_type] = forecast_data
                         print(f"🤖 Used ML model for {tax_type}")
                     else:
-                        # Fallback if ML model fails during prediction
                         forecast_data = self.generate_fallback_forecast(tax_type, future_dates)
                         forecasts[tax_type] = forecast_data
-                        print(f"🔄 Used fallback for {tax_type} (ML prediction failed)")
+                        print(f"🔄 Used fallback for {tax_type} (ML failed)")
                 elif tax_type in self.fallback_models:
                     forecast_data = self.generate_fallback_forecast(tax_type, future_dates)
                     forecasts[tax_type] = forecast_data
                     print(f"🔄 Used fallback for {tax_type}")
-            
-            # Ensure we have total revenue - calculate from components for accuracy
+
             calculated_total = self.calculate_total_from_components(forecasts, future_dates)
-            if calculated_total:
+            if calculated_total and 'values' in calculated_total:
                 forecasts['Total_Revenue'] = calculated_total
                 print("✅ Calculated Total Revenue from components")
             elif 'Total_Revenue' not in forecasts:
-                forecast_data = self.generate_fallback_forecast('Total_Revenue', future_dates)
-                forecasts['Total_Revenue'] = forecast_data
+                forecasts['Total_Revenue'] = self.generate_fallback_forecast('Total_Revenue', future_dates)
                 print("🔄 Used fallback for Total Revenue")
-            
+
             print(f"✅ Generated forecasts for {len(forecasts)} tax types")
             self.print_forecast_summary(forecasts)
-            
             summary = self.get_forecast_summary(forecasts)
-            
+
             return {
                 'forecasts': self.make_forecasts_json_serializable(forecasts),
                 'summary': summary
             }
-            
+
         except Exception as e:
             print(f"❌ Forecast generation error: {str(e)}")
             return {"error": f"Forecast generation failed: {str(e)}"}
+
+    # Keep generate_scaled_forecast, generate_fallback_forecast, calculate_total_from_components, 
+    # make_forecasts_json_serializable, print_forecast_summary, get_forecast_summary as in your current code,
+    # but **ensure any return dict always contains 'values' key**.
+
+
     
     def generate_scaled_forecast(self, tax_type, model, future_dates):
         """Generate forecast and scale it to realistic Zambian revenue values"""
@@ -443,3 +372,4 @@ class AdvancedForecastEngine:
                 })
         
         return summary
+
