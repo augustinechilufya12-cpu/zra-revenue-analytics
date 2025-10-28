@@ -172,7 +172,7 @@ def load_data_files():
 data_files = load_data_files()
 
 # Authentication routes
-@app.route('/login', methods=['GET', 'POST'], endpoint='login_route')
+@app.route('/api/login', methods=['GET', 'POST'], endpoint='login_route')
 def login():
     try:
         data = request.get_json()
@@ -819,4 +819,5 @@ if __name__ == '__main__':
     # PRODUCTION SETTINGS
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
+
 
