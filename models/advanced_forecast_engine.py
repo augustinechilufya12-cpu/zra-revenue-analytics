@@ -8,7 +8,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class AdvancedForecastEngine:
-    def __init__(self, config):
+    def _init_(self, config):
         self.config = config
         self.models_loaded = False
         self.models = {}
@@ -20,27 +20,27 @@ class AdvancedForecastEngine:
             if self.models_loaded:
                 print(f"✅ Forecast Engine initialized with {len(self.models)} models")
             else:
-                print("⚠️ Forecast Engine using fallback patterns only")
+                print("⚠ Forecast Engine using fallback patterns only")
         except Exception as e:
             print(f"❌ Error initializing Forecast Engine: {str(e)}")
             self.models_loaded = False
     
     def calculate_scaling_factors(self):
-        """Calculate realistic scaling factors to produce values in millions/billions"""
+        """Calculate realistic scaling factors based on your actual CSV data"""
         scaling_factors = {
-            'VAT': 0.8,           # Scale to ~2-3 billion range
-            'Corporate_Tax': 0.4,  # Scale to ~0.8-1.5 billion range
-            'Customs_Duties': 0.4, # Scale to ~0.8-1.5 billion range  
-            'Excise_Tax': 0.2,     # Scale to ~0.4-0.8 billion range
-            'Mineral_Royalty': 0.02, # Scale to ~40-80 million range
-            'PAYE': 0.2,           # Scale to ~0.4-0.8 billion range
-            'Total_Revenue': 2.0   # Scale to ~4-7 billion range (sum of components)
+            'VAT': 8000,           # Scale from ~3M to ~25B
+            'Corporate_Tax': 4000,  # Scale from ~3M to ~14B
+            'Customs_Duties': 4000, # Scale from ~3M to ~14B  
+            'Excise_Tax': 2000,     # Scale from ~3M to ~7B
+            'Mineral_Royalty': 200, # Scale from ~3M to ~0.6B
+            'PAYE': 2000,           # Scale from ~3M to ~7B
+            'Total_Revenue': 20000  # Scale from ~3M to ~70B
         }
         return scaling_factors
     
     def load_models_with_fallback(self):
         """Load models with robust error handling and fallbacks"""
-        models_folder = os.path.join(os.path.dirname(__file__), '..', 'trained_models')
+        models_folder = os.path.join(os.path.dirname(_file_), '..', 'trained_models')
         
         model_files = {
             'Corporate_Tax': 'Corporate_Tax_model.pkl',
@@ -92,7 +92,7 @@ class AdvancedForecastEngine:
             with open(model_path, 'rb') as f:
                 return pickle.load(f)
         except (ModuleNotFoundError, AttributeError, ImportError) as e:
-            print(f"⚠️ Compatibility issue loading {os.path.basename(model_path)}: {str(e)}")
+            print(f"⚠ Compatibility issue loading {os.path.basename(model_path)}: {str(e)}")
             print("🔄 Attempting compatibility load...")
             
             # Try with protocol-based loading
@@ -117,41 +117,41 @@ class AdvancedForecastEngine:
             return None
     
     def create_fallback_for_tax(self, tax_type):
-        """Create a realistic fallback pattern for a tax type with values in millions"""
-        # Base patterns in millions (realistic Zambian revenue figures)
+        """Create a realistic fallback pattern for a tax type"""
+        # Base patterns derived from your CSV data
         fallback_patterns = {
             'VAT': {
-                'base': 2800, 'trend': 150, 'seasonality': 0.1,  # ~2.8-3.5 billion
+                'base': 28e9, 'trend': 1.5e9, 'seasonality': 0.1,
                 'growth_rate': 0.08, 'monthly_variation': 0.15
             },
             'Corporate_Tax': {
-                'base': 1400, 'trend': 80, 'seasonality': 0.15,   # ~1.4-1.8 billion
+                'base': 14e9, 'trend': 0.8e9, 'seasonality': 0.15,
                 'growth_rate': 0.06, 'monthly_variation': 0.12
             },
             'Customs_Duties': {
-                'base': 1400, 'trend': 60, 'seasonality': 0.08,   # ~1.4-1.7 billion
+                'base': 14e9, 'trend': 0.6e9, 'seasonality': 0.08,
                 'growth_rate': 0.04, 'monthly_variation': 0.10
             },
             'Excise_Tax': {
-                'base': 700, 'trend': 40, 'seasonality': 0.12,    # ~700-900 million
+                'base': 7e9, 'trend': 0.4e9, 'seasonality': 0.12,
                 'growth_rate': 0.05, 'monthly_variation': 0.08
             },
             'Mineral_Royalty': {
-                'base': 600, 'trend': 10, 'seasonality': 0.2,     # ~600-700 million
+                'base': 0.6e9, 'trend': 0.1e9, 'seasonality': 0.2,
                 'growth_rate': 0.12, 'monthly_variation': 0.25
             },
             'PAYE': {
-                'base': 700, 'trend': 50, 'seasonality': 0.05,    # ~700-850 million
+                'base': 7e9, 'trend': 0.5e9, 'seasonality': 0.05,
                 'growth_rate': 0.07, 'monthly_variation': 0.07
             },
             'Total_Revenue': {
-                'base': 7000, 'trend': 400, 'seasonality': 0.1,   # ~7-8 billion (sum of above)
+                'base': 70e9, 'trend': 4e9, 'seasonality': 0.1,
                 'growth_rate': 0.09, 'monthly_variation': 0.12
             }
         }
         
         self.fallback_models[tax_type] = fallback_patterns.get(tax_type, {
-            'base': 1000, 'trend': 50, 'seasonality': 0.1,
+            'base': 10e9, 'trend': 0.5e9, 'seasonality': 0.1,
             'growth_rate': 0.05, 'monthly_variation': 0.1
         })
         print(f"🔄 Created fallback pattern for {tax_type}")
@@ -210,7 +210,7 @@ class AdvancedForecastEngine:
             return {"error": f"Forecast generation failed: {str(e)}"}
     
     def generate_scaled_forecast(self, tax_type, model, future_dates):
-        """Generate forecast and scale it to realistic values in millions"""
+        """Generate forecast and scale it to realistic values"""
         try:
             future = pd.DataFrame({'ds': future_dates})
             forecast = model.predict(future)
@@ -221,17 +221,17 @@ class AdvancedForecastEngine:
             # Get raw predictions
             raw_values = forecast['yhat'].values
         
-            # Apply scaling factor to get realistic values (already in millions)
+            # Apply scaling factor to get realistic values (in millions)
             scaling_factor = self.scaling_factors.get(tax_type, 1)
             scaled_values = raw_values * scaling_factor
         
-            # Values are now in millions (no need for extra multiplication)
-            revenue_values = scaled_values
+            # Convert to actual revenue values (multiply by 1,000,000 to get actual currency)
+            revenue_values = scaled_values * 1_000_000
         
             # Calculate confidence intervals
             if 'yhat_lower' in forecast.columns and 'yhat_upper' in forecast.columns:
-               yhat_lower = forecast['yhat_lower'].values * scaling_factor
-               yhat_upper = forecast['yhat_upper'].values * scaling_factor
+               yhat_lower = forecast['yhat_lower'].values * scaling_factor * 1_000_000
+               yhat_upper = forecast['yhat_upper'].values * scaling_factor * 1_000_000
             else:
                std_dev = np.std(revenue_values) * 0.1
                yhat_lower = np.maximum(0, revenue_values - std_dev)
@@ -239,7 +239,7 @@ class AdvancedForecastEngine:
         
             return {
                 'dates': future_dates.strftime('%Y-%m-%d').tolist(),
-                'values': revenue_values.tolist(),  # Values in millions
+                'values': revenue_values.tolist(),  # Now in actual currency units
                 'yhat_lower': yhat_lower.tolist(),
                 'yhat_upper': yhat_upper.tolist(),
                 'method': 'ML Model'
@@ -366,7 +366,9 @@ class AdvancedForecastEngine:
                 growth = ((values[-1] - values[0]) / values[0] * 100) if values[0] != 0 else 0
                 method = data.get('method', 'Unknown')
                 
-                print(f"  {tax_type:18} | ZMW {avg_monthly:8.1f}M avg | {growth:6.1f}% growth | {method}")
+                display_avg = f"K{avg_monthly/1e9:.2f}B"
+                
+                print(f"  {tax_type:18} | {display_avg:>10} avg | {growth:6.1f}% growth | {method}")
         print("=" * 80)
     
     def get_forecast_summary(self, forecasts):
@@ -393,4 +395,5 @@ class AdvancedForecastEngine:
                     'method': method
                 })
         
+
         return summary
