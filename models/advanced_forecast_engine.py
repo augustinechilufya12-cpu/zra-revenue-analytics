@@ -26,15 +26,15 @@ class AdvancedForecastEngine:
             self.models_loaded = False
     
     def calculate_scaling_factors(self):
-        """Calculate realistic scaling factors based on your actual CSV data"""
+        """Calculate realistic scaling factors to produce values in millions/billions"""
         scaling_factors = {
-            'VAT': 8000,           # Scale from ~3M to ~25B
-            'Corporate_Tax': 4000,  # Scale from ~3M to ~14B
-            'Customs_Duties': 4000, # Scale from ~3M to ~14B  
-            'Excise_Tax': 2000,     # Scale from ~3M to ~7B
-            'Mineral_Royalty': 200, # Scale from ~3M to ~0.6B
-            'PAYE': 2000,           # Scale from ~3M to ~7B
-            'Total_Revenue': 20000  # Scale from ~3M to ~70B
+            'VAT': 0.8,           # Scale to ~2-3 billion range
+            'Corporate_Tax': 0.4,  # Scale to ~0.8-1.5 billion range
+            'Customs_Duties': 0.4, # Scale to ~0.8-1.5 billion range  
+            'Excise_Tax': 0.2,     # Scale to ~0.4-0.8 billion range
+            'Mineral_Royalty': 0.02, # Scale to ~40-80 million range
+            'PAYE': 0.2,           # Scale to ~0.4-0.8 billion range
+            'Total_Revenue': 2.0   # Scale to ~4-7 billion range (sum of components)
         }
         return scaling_factors
     
@@ -117,41 +117,41 @@ class AdvancedForecastEngine:
             return None
     
     def create_fallback_for_tax(self, tax_type):
-        """Create a realistic fallback pattern for a tax type"""
-        # Base patterns derived from your CSV data
+        """Create a realistic fallback pattern for a tax type with values in millions"""
+        # Base patterns in millions (realistic Zambian revenue figures)
         fallback_patterns = {
             'VAT': {
-                'base': 28e9, 'trend': 1.5e9, 'seasonality': 0.1,
+                'base': 2800, 'trend': 150, 'seasonality': 0.1,  # ~2.8-3.5 billion
                 'growth_rate': 0.08, 'monthly_variation': 0.15
             },
             'Corporate_Tax': {
-                'base': 14e9, 'trend': 0.8e9, 'seasonality': 0.15,
+                'base': 1400, 'trend': 80, 'seasonality': 0.15,   # ~1.4-1.8 billion
                 'growth_rate': 0.06, 'monthly_variation': 0.12
             },
             'Customs_Duties': {
-                'base': 14e9, 'trend': 0.6e9, 'seasonality': 0.08,
+                'base': 1400, 'trend': 60, 'seasonality': 0.08,   # ~1.4-1.7 billion
                 'growth_rate': 0.04, 'monthly_variation': 0.10
             },
             'Excise_Tax': {
-                'base': 7e9, 'trend': 0.4e9, 'seasonality': 0.12,
+                'base': 700, 'trend': 40, 'seasonality': 0.12,    # ~700-900 million
                 'growth_rate': 0.05, 'monthly_variation': 0.08
             },
             'Mineral_Royalty': {
-                'base': 0.6e9, 'trend': 0.1e9, 'seasonality': 0.2,
+                'base': 600, 'trend': 10, 'seasonality': 0.2,     # ~600-700 million
                 'growth_rate': 0.12, 'monthly_variation': 0.25
             },
             'PAYE': {
-                'base': 7e9, 'trend': 0.5e9, 'seasonality': 0.05,
+                'base': 700, 'trend': 50, 'seasonality': 0.05,    # ~700-850 million
                 'growth_rate': 0.07, 'monthly_variation': 0.07
             },
             'Total_Revenue': {
-                'base': 70e9, 'trend': 4e9, 'seasonality': 0.1,
+                'base': 7000, 'trend': 400, 'seasonality': 0.1,   # ~7-8 billion (sum of above)
                 'growth_rate': 0.09, 'monthly_variation': 0.12
             }
         }
-        
+    
         self.fallback_models[tax_type] = fallback_patterns.get(tax_type, {
-            'base': 10e9, 'trend': 0.5e9, 'seasonality': 0.1,
+            'base': 1000, 'trend': 50, 'seasonality': 0.1,
             'growth_rate': 0.05, 'monthly_variation': 0.1
         })
         print(f"🔄 Created fallback pattern for {tax_type}")
@@ -397,3 +397,4 @@ class AdvancedForecastEngine:
         
 
         return summary
+
