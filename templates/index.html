@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZRA Revenue Analytics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+</head>
+<body>
+    <div id="dashboard" class="page">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-chart-line"></i> Revenue Analytics</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="nav-link active" data-page="dashboard-overview">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a></li>
+<li><a href="#" class="nav-link" data-page="revenue-forecasting">
+    <i class="fas fa-chart-line"></i> Revenue Forecasting
+</a></li>
+                    <li><a href="#" class="nav-link" data-page="anomaly-detection">
+                        <i class="fas fa-exclamation-triangle"></i> Anomaly Detection
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="scenario-planning">
+                        <i class="fas fa-sliders-h"></i> Scenario Planning
+                    </a></li>
+                    <li class="nav-divider">More Features</li>
+                    <li><a href="#" class="nav-link" data-page="reports">
+                        <i class="fas fa-file-pdf"></i> Reports & Insights
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="admin">
+                        <i class="fas fa-cog"></i> Admin Settings
+                    </a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navigation -->
+            <header class="top-nav">
+                <div class="nav-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="page-title">Dashboard Overview</h1>
+                </div>
+                <div class="nav-right">
+                    <div class="user-info">
+                        <span>Welcome, <strong id="user-display">Analyst</strong></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content-area">
+                <!-- Dashboard Overview -->
+                <div id="dashboard-overview" class="content-page active">
+                    <div class="page-header">
+                        <h2>Revenue Dashboard</h2>
+                        <p>Overview of tax revenue performance and key metrics</p>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card clickable-card" data-target="revenue-forecasting">
+                            <div class="kpi-header">
+                                <h3>Total Revenue</h3>
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="kpi-value" id="total-revenue-value">Loading...</div>
+                            <div class="kpi-trend positive" id="revenue-trend">
+                                <i class="fas fa-arrow-up"></i> Calculating...
+                            </div>
+                        </div>
+
+                        <div class="kpi-card clickable-card" data-target="revenue-forecasting">
+                            <div class="kpi-header">
+                                <h3>Growth Rate</h3>
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="kpi-value" id="growth-rate-value">Loading...</div>
+                            <div class="kpi-trend positive" id="growth-trend">
+                                <i class="fas fa-arrow-up"></i> Calculating...
+                            </div>
+                        </div>
+
+                        <div class="kpi-card clickable-card" data-target="anomaly-detection">
+                            <div class="kpi-header">
+                                <h3>Anomalies</h3>
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="kpi-value" id="anomalies-value">Loading...</div>
+                            <div class="kpi-trend negative" id="anomalies-trend">
+                                <i class="fas fa-arrow-up"></i> Calculating...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="chart-grid">
+                        <div class="chart-card">
+                            <h3>Revenue vs Forecast</h3>
+                            <div id="revenue-forecast-chart-2" class="chart-placeholder-large">
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <h3>Recent Alerts</h3>
+                            <div class="alerts-list" id="recent-alerts">
+                                <div class="alert-item info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+ <!-- Revenue Forecasting Page -->
+<div id="revenue-forecasting" class="content-page">
+    <div class="page-header">
+        <h2>Revenue Forecasting</h2>
+        <p>Generate annual revenue forecasts using trained ML models</p>
+    </div>
+
+    <div class="controls-row">
+        <button class="btn-primary" id="run-forecast">
+            <i class="fas fa-chart-line"></i> Generate Forecast
+        </button>
+        <button class="btn-secondary" id="export-forecast">
+            <i class="fas fa-download"></i> Export Forecast Data
+        </button>
+    </div>
+
+    <!-- Vertical Layout for Forecasting -->
+    <div class="analytics-vertical">
+        <!-- Revenue Forecast Chart -->
+        <div class="chart-container full-height">
+            <h3 class="chart-title">Annual Revenue Forecast</h3>
+            <p class="chart-subtitle">12-month revenue projections across all tax types</p>
+            <div id="revenue-forecast-chart" class="chart-placeholder-large">
+                <div class="no-data">
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Heatmap -->
+        <div class="chart-container medium-height">
+            <h3 class="chart-title">Monthly Revenue Distribution</h3>
+            <p class="chart-subtitle">Heatmap showing forecasted revenue patterns by tax type and month</p>
+            <div id="revenue-heatmap" class="chart-placeholder-medium">
+                <div class="no-data">
+                    <i class="fas fa-calendar-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <p>Forecast data will appear here</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forecast Summary -->
+        <div class="model-performance-card">
+            <h3 class="chart-title">Forecast Summary</h3>
+            <p class="chart-subtitle">Key metrics from the generated forecast</p>
+            <div id="forecast-summary-table" class="performance-table">
+                <div class="no-data">No forecast generated yet</div>
+            </div>
+        </div>
+    </div>
+</div>
+                <!-- Anomaly Detection Page -->
+                <div id="anomaly-detection" class="content-page">
+                    <div class="page-header">
+                        <h2>Anomaly Detection</h2>
+                        <p>Identify and analyze unusual patterns in tax revenues</p>
+                    </div>
+
+                    <div class="anomaly-grid">
+                        <div class="anomaly-summary">
+                            <div class="summary-card high">
+                                <h3>High Severity</h3>
+                                <span class="count" id="high-severity-count">0</span>
+                            </div>
+                            <div class="summary-card medium">
+                                <h3>Medium Severity</h3>
+                                <span class="count" id="medium-severity-count">0</span>
+                            </div>
+                            <div class="summary-card low">
+                                <h3>Low Severity</h3>
+                                <span class="count" id="low-severity-count">0</span>
+                            </div>
+                        </div>
+
+                        <div class="anomaly-table-container">
+                            <!-- In your anomaly-detection page -->
+<table class="anomaly-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Region</th>
+            <th>Tax Type</th>
+            <th>Severity</th>
+            <th>Amount</th>
+            <th>Deviation</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="anomalies-table-body">
+        <!-- Anomalies will be populated here -->
+    </tbody>
+</table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario Planning Page -->
+                <div id="scenario-planning" class="content-page">
+                    <div class="page-header">
+                        <h2>Scenario Planning</h2>
+                        <p>Test different policy scenarios and their impact on revenue</p>
+                    </div>
+
+                    <div class="scenario-container">
+                        <div class="scenario-controls">
+                            <h3>Policy Parameters</h3>
+
+                            <div class="slider-group">
+                                <label>VAT Rate: <span id="vat-value">16%</span></label>
+                                <input type="range" id="vat-slider" min="10" max="25" value="16" step="0.5">
+                            </div>
+
+                            <div class="slider-group">
+                                <label>Corporate Tax: <span id="corp-tax-value">35%</span></label>
+                                <input type="range" id="corp-tax-slider" min="20" max="45" value="35" step="0.5">
+                            </div>
+
+                            <div class="slider-group">
+                                <label>Income Tax: <span id="income-tax-value">37.5%</span></label>
+                                <input type="range" id="income-tax-slider" min="25" max="50" value="37.5" step="0.5">
+                            </div>
+
+                            <button class="btn-primary" id="run-simulation">
+                                <i class="fas fa-play"></i> Run Simulation
+                            </button>
+                        </div>
+
+                        <div class="scenario-results">
+                            <h3>Projected Impact</h3>
+                            <div class="result-card">
+                                <h4>Estimated Revenue Change</h4>
+                                <div class="result-value" id="revenue-change-value">+K0</div>
+                                <p>Based on current parameter adjustments</p>
+                            </div>
+                            <div id="scenario-chart" class="chart-placeholder">
+                                Simulation results will be displayed here
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Page -->
+                <div id="reports" class="content-page">
+                    <div class="page-header">
+                        <h2>Reports & Insights</h2>
+                        <p>Generate and export comprehensive reports</p>
+                    </div>
+
+                    <div class="reports-container">
+                        <div class="report-card">
+                            <h3>Monthly Revenue Report</h3>
+                            <p>Detailed breakdown of monthly tax collections</p>
+                            <button class="btn-primary">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                        </div>
+
+                        <div class="report-card">
+                            <h3>Anomaly Analysis Report</h3>
+                            <p>Comprehensive analysis of detected anomalies</p>
+                            <button class="btn-primary">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Settings Page -->
+                <div id="admin" class="content-page">
+                    <div class="page-header">
+                        <h2>Admin Settings</h2>
+                        <p>Manage system configuration and users</p>
+                    </div>
+
+                    <div class="admin-container">
+                        <div class="settings-section">
+                            <h3>System Configuration</h3>
+                            <div class="setting-item">
+                                <label>Data Refresh Interval</label>
+                                <select>
+                                    <option>15 minutes</option>
+                                    <option>30 minutes</option>
+                                    <option selected>1 hour</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label>Model Status</label>
+                                <div id="model-status">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+/* Dashboard Specific Styles and Overrides */
+
+/* Enhanced Chart Containers */
+.chart-container {
+    position: relative;
+}
+
+.chart-container .plotly {
+    border-radius: var(--border-radius);
+}
+
+/* Loading States */
+.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 10;
+}
+
+/* Enhanced KPI Cards with Icons */
+.kpi-card .kpi-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(46, 134, 171, 0.1);
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.kpi-card.total-revenue .kpi-icon {
+    background: rgba(46, 134, 171, 0.1);
+    color: var(--primary-color);
+}
+
+.kpi-card.growth-rate .kpi-icon {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.kpi-card.anomalies .kpi-icon {
+    background: rgba(199, 62, 29, 0.1);
+    color: var(--danger-color);
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .top-nav,
+    .btn-primary,
+    .sidebar-toggle {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+    
+    .kpi-card,
+    .chart-card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-color: #0044cc;
+        --secondary-color: #663399;
+        --accent-color: #ff6600;
+        --danger-color: #cc0000;
+        --success-color: #008000;
+        --warning-color: #ff8c00;
+    }
+    
+    .kpi-card {
+        border: 2px solid var(--dark-color);
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+    .content-area {
+        background: #1a1a1a;
+        color: #ffffff;
+    }
+    
+    .chart-card,
+    .kpi-card,
+    .model-performance-card,
+    .scenario-controls,
+    .scenario-results,
+    .report-card,
+    .admin-container,
+    .anomaly-table-container {
+        background: #2d2d2d;
+        color: #ffffff;
+    }
+    
+    .page-header h2,
+    .chart-title,
+    .kpi-value,
+    .performance-table th {
+        color: #ffffff;
+    }
+    
+    .page-header p,
+    .chart-subtitle {
+        color: #b0b0b0;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #25749e;
+}
+
+/* Focus Styles for Accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.nav-link:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Tooltip Styles */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:hover::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--dark-color);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--border-radius);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-tooltip]:hover::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--dark-color);
+    margin-bottom: -5px;
+}
